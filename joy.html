@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For My Special Girlfriend 💖</title>
+  <meta name="description" content="A cute, animated single‑file webpage for your special GF."/>
+  <style>
+    :root{
+      --bg1:#0f0c29; --bg2:#302b63; --bg3:#24243e;
+      --accent:#ff6ec7; --accent2:#ffb86c; --soft:#ffd1e8; --card:#121222cc; --glass:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:#fff; font:16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% 10%, #1a152f 0%, #0b0b18 55%, #000 100%);
+      overflow-x:hidden;
+    }
+    /* Star/heart canvas behind everything */
+    canvas#bg{position:fixed; inset:0; z-index:-1}
+
+    /* Floating ambient hearts */
+    .hearts{position:fixed; inset:0; pointer-events:none; z-index:0}
+    .hearts span{
+      position:absolute; font-size:12px; filter: drop-shadow(0 0 6px rgba(255, 100, 200,.6));
+      animation: floatUp linear infinite; opacity:.8
+    }
+    @keyframes floatUp{from{transform:translateY(10vh) scale(.8) rotate(0)} to{transform:translateY(-110vh) scale(1.2) rotate(360deg)}}
+
+    /* Page layout */
+    .wrap{max-width:1000px; margin:auto; padding:24px}
+
+    header{
+      display:grid; gap:18px; place-items:center; text-align:center; padding:64px 16px 24px;
+    }
+    .title{
+      font-weight:800; font-size:clamp(36px,5vw,60px); letter-spacing:.5px;
+      background: conic-gradient(from 180deg at 50% 50%, var(--accent), #b794f4, #63b3ed, var(--accent2), var(--accent));
+      -webkit-background-clip:text; background-clip:text; color:transparent; filter: drop-shadow(0 6px 22px rgba(255,110,199,.25));
+    }
+    .subtitle{opacity:.9; font-size:clamp(16px,2.4vw,20px)}
+
+    .card{
+      background:linear-gradient(180deg, var(--glass), transparent 140%);
+      border:1px solid rgba(255,255,255,.08); border-radius:22px; padding:24px; backdrop-filter: blur(8px);
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+
+    /* Typewriter */
+    .type{min-height:32px; font-size:clamp(18px,2.8vw,22px)}
+    .caret{display:inline-block; width:10px; height:1.1em; background:currentColor; margin-left:4px; animation: blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:0}}
+
+    /* CTA button */
+    .btn{
+      display:inline-flex; align-items:center; gap:10px; padding:14px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.18);
+      background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03)); color:#fff; text-decoration:none; font-weight:700;
+      box-shadow:0 10px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15);
+      transition: transform .15s ease, box-shadow .15s ease, background .2s ease; cursor:pointer
+    }
+    .btn:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(0,0,0,.45)}
+
+    /* Reasons grid */
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px}
+    .reason{
+      position:relative; padding:18px 16px 18px 18px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+      transition:transform .2s ease, background .2s ease
+    }
+    .reason:hover{transform:translateY(-3px); background:rgba(255,255,255,.08)}
+
+    /* Gallery */
+    .gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px}
+    .gallery img{width:100%; height:220px; object-fit:cover; border-radius:18px; border:1px solid rgba(255,255,255,.08)}
+
+    /* Slideshow */
+    .slideshow{position:relative}
+    .slides{position:relative; overflow:hidden; border-radius:18px; border:1px solid rgba(255,255,255,.08)}
+    .slide{position:absolute; inset:0; opacity:0; transition: opacity .8s ease}
+    .slide.active{opacity:1}
+    .slide img{width:100%; height:360px; object-fit:cover; transform: scale(1.05); animation: kenburns 9s ease-in-out infinite alternate}
+    @keyframes kenburns{from{transform:scale(1.05)} to{transform:scale(1.12)} }
+    .slide figcaption{position:absolute; left:0; right:0; bottom:0; padding:12px 16px; background:linear-gradient(180deg, transparent, rgba(0,0,0,.6)); font-weight:600}
+    .controls{display:flex; gap:8px; justify-content:center; margin:10px 0}
+    .dots{display:flex; gap:6px; justify-content:center; margin-top:8px}
+    .dot{width:10px; height:10px; border-radius:999px; border:1px solid rgba(255,255,255,.5); background:transparent}
+    .dot.active{background:#fff}
+
+    /* Footer note */
+    footer{opacity:.75; text-align:center; padding:30px}
+
+    /* Fireworks (canvas overlay) */
+    #fx{position:fixed; inset:0; pointer-events:none}
+
+    /* Floating bottom player */
+    .player{position:fixed; right:16px; bottom:16px; z-index:5; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:6px 10px}
+
+    /* Mobile spacing niceties */
+    section{margin:24px 0}
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div class="hearts" id="hearts"></div>
+  <canvas id="fx"></canvas>
+
+  <div class="wrap">
+    <header>
+      <div class="card" style="padding:26px 22px; text-align:center;">
+        <h1 class="title">Hi, <span id="gfName">Your Name</span> — my special girl 💞</h1>
+        <p class="subtitle">I made this tiny corner of the internet to remind you how loved you are, every second of every day.</p>
+        <p class="type" id="type"></p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px">
+          <button class="btn" id="surpriseBtn">Open a surprise ✨</button>
+          <button class="btn" id="switchTheme">Switch vibe 🌙</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- New slideshow section (replaces the old counter section) -->
+    <section class="card">
+      <h2>Excited to see you</h2>
+      <div class="slideshow">
+        <div class="slides" id="slider"></div>
+        <div class="controls">
+          <button class="btn" id="prev" aria-label="Previous">◀</button>
+          <button class="btn" id="play" aria-label="Play">▶</button>
+          <button class="btn" id="pause" aria-label="Pause">⏸</button>
+          <button class="btn" id="next" aria-label="Next">▶▶</button>
+        </div>
+        <div class="dots" id="dots" aria-label="Slide navigation"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Reasons I adore you</h2>
+      <div class="grid" id="reasons">
+        <div class="reason">Your laugh makes everything brighter.</div>
+        <div class="reason">You’re the reason my heart beats faster.</div>
+        <div class="reason">With you, everything feels right.</div>
+        <div class="reason">You’re my happy place.</div>
+        <div class="reason">Every moment with you feels like magic.</div>
+        <div class="reason">You are effortlessly gorgeous, inside & out.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>My little gallery</h2>
+      <p style="margin-top:-6px; opacity:.8">pinaka gwapa sa tanan.</p>
+      <div class="gallery">
+        <img src="https://scontent.fcgy3-2.fna.fbcdn.net/v/t39.30808-6/533130406_743576301705944_6372201434459271356_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeHrjj7OPOF66Qb6bxjBrPrqfe-x_7qqc-9977H_uqpz76qjK-Si0u0Vo-Pz9_Vq6b9hliq6gPzZ3r16WUbHmOZs&_nc_ohc=5wbs3eqNXV0Q7kNvwEZyTJF&_nc_oc=Adla322oAZ5nBIvqiBYDKpBsbZwBWDQecYvRfmMuyjFd7uEPAUxcFW6qosZWMz92J-0&_nc_zt=23&_nc_ht=scontent.fcgy3-2.fna&_nc_gid=cxA7-atF__7lNVIBhapT_g&oh=00_AfVGFOoRQn3QAm-e1JESC2Jpu_jSXsarFj3In_LBakW9lA&oe=68A3711E"/>
+        <img src="https://scontent.fcgy3-2.fna.fbcdn.net/v/t39.30808-6/531808283_743576998372541_6907465517732611371_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEaTcAVYH-ISGuF9kxltwxlyskAp8JsjefKyQCnwmyN59D7mOiXXsvWoEJOuSXwZcUTwqK11cZTk5zTaHGBUyDj&_nc_ohc=fRUeWz6Otb4Q7kNvwE_n8jU&_nc_oc=AdmIZADMSpSwYE11EW8zWJ-4VBEOJQxXPwHepwQO7NlXfGZSzFD169TMJauUG_HSG8c&_nc_zt=23&_nc_ht=scontent.fcgy3-2.fna&_nc_gid=7wEF6cOyboZFszlLwwieVw&oh=00_AfWJcclqWAubdLMgODMbNE9N_czvoXyLTlamElQ6GsCqJA&oe=68A3646E" alt="memory 2"/>
+        <img src="https://scontent.fcgy3-1.fna.fbcdn.net/v/t39.30808-6/532064495_743577411705833_4510728583342920028_n.jpg?_nc_cat=104&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeEo0ZT90LLBQXwYAU5BpuDrkoLSgBkF2DSSgtKAGQXYNF12XZAI_DXQ94Kf13iaU3D5Nynv_bwnlfeoPIWOW8ij&_nc_ohc=94KRY93wTp0Q7kNvwGW08lZ&_nc_oc=AdkadnIfrhKfZ2Ixe_Hm29CvqSz6nvPCkX5s9aEvfVZKe4AYEijCnLjHx-rCNQNeh-E&_nc_zt=23&_nc_ht=scontent.fcgy3-1.fna&_nc_gid=G5VHxYoyKTw5IBWN-3_BbQ&oh=00_AfWxvX9rl93dakLv8SYeK4q_JgvkPX-7MsoVmh2qOk2dZg&oe=68A3654A" alt="memory 3"/>
+        <img src="https://scontent.fcgy3-1.fna.fbcdn.net/v/t39.30808-6/533130469_743577785039129_1151169323625487843_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFen0NoVDIplXgnd7U_OCAjmLKbFh_2UKiYspsWH_ZQqBv0zOnj3olJt1ecUIJVS097tW7f5kkmd6ZN0D3Ecgw3&_nc_ohc=OUYwV9_s8J4Q7kNvwG5jFgX&_nc_oc=Adn1OdMBm-oPnbnR4gz3NsE-h7kaQ-GOC4sx7IUBkCuWSy4AVd-b8sRbuJEY-C-vgWo&_nc_zt=23&_nc_ht=scontent.fcgy3-1.fna&_nc_gid=_Q50qVuVhENWQ_uome1PaQ&oh=00_AfUkqCrfKAp4FOYlCgE8eLkIjkxXNeuuEjkMiC5u-B1exQ&oe=68A34EC6" alt="memory 4"/>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>A note for you</h2>
+      <p style="opacity:.9">No matter how your day is going, pause here and breathe. You are loved more than words, more than distance, more than time. I choose you, today and every day. 💗</p>
+    </section>
+
+    <footer>Made with <span style="color:var(--accent)">♥</span> by your person.</footer>
+  </div>
+
+  <div class="player">
+    <audio id="song" controls preload="auto">
+      <!-- Optional: put your song file in the same folder and set the src below -->
+      <!-- <source src="yoursong.mp3" type="audio/mpeg"> -->
+      Your browser does not support the audio element.
+    </audio>
+  </div>
+
+  <script>
+    // ======= Editable SETTINGS =======
+    const SETTINGS = {
+      girlfriendName: 'Joy',            // 👉 change to her name
+      typewriterLines: [                // 👉 edit your messages here
+        'You + Me = Home. 🏠',
+        'Your smile is my favorite view. ☀️',
+        'I am proud of you—always. 🌷',
+        'Let\'s keep writing our story. 📖'
+      ]
+    }
+
+    // Apply name
+    document.getElementById('gfName').textContent = SETTINGS.girlfriendName
+
+    // ======= Background stars + parallax =======
+    const bg = document.getElementById('bg')
+    const bctx = bg.getContext('2d', { alpha:true })
+    let W,H, stars=[]
+    function resize(){ W = bg.width = innerWidth; H = bg.height = innerHeight }
+    addEventListener('resize', resize); resize()
+    function makeStars(){
+      stars = Array.from({length: 140}, () => ({
+        x: Math.random()*W,
+        y: Math.random()*H,
+        r: Math.random()*1.2+0.3,
+        s: Math.random()*0.6+0.2
+      }))
+    }
+    makeStars()
+
+    // ======= Floating hearts layer =======
+    const heartsEl = document.getElementById('hearts')
+    function spawnHearts(){
+      for(let i=0; i<24; i++){
+        const s = document.createElement('span')
+        s.textContent = ['❤️','💖','💗','💕','💞'][Math.floor(Math.random()*5)]
+        const left = Math.random()*100
+        const duration = 10 + Math.random()*18
+        const delay = Math.random()*-duration
+        s.style.left = left+'vw'
+        s.style.bottom = (-10 + Math.random()*20)+'vh'
+        s.style.animationDuration = duration+'s'
+        s.style.animationDelay = delay+'s'
+        s.style.opacity = (0.5+Math.random()*0.5)
+        heartsEl.appendChild(s)
+      }
+    }
+    spawnHearts()
+
+    // ======= Typewriter =======
+    const type = document.getElementById('type')
+    const caret = document.createElement('span'); caret.className='caret'; caret.textContent=' '
+    let lineIdx = 0, charIdx = 0, erasing=false
+    function tick(){
+      const line = SETTINGS.typewriterLines[lineIdx % SETTINGS.typewriterLines.length]
+      type.textContent = line.slice(0, charIdx)
+      type.appendChild(caret)
+      if(!erasing){
+        if(charIdx < line.length){ charIdx++ }
+        else{ erasing = true; setTimeout(tick, 1200); return }
+      } else {
+        if(charIdx>0){ charIdx-- }
+        else{ erasing=false; lineIdx++; }
+      }
+      setTimeout(tick, erasing? 28: 42)
+    }
+    tick()
+
+    // ======= Slideshow (Excited to see you) =======
+    const slides = [
+      {src: 'https://picsum.photos/seed/gf1/1000/700', caption: 'Can’t wait to see you ❤️'},
+      {src: 'https://picsum.photos/seed/gf2/1000/700', caption: 'Counting the minutes…'},
+      {src: 'https://picsum.photos/seed/gf3/1000/700', caption: 'Your smile = my favorite view'},
+      {src: 'https://picsum.photos/seed/gf4/1000/700', caption: 'Soon. Us. ✨'}
+    ]
+
+    const slider = document.getElementById('slider')
+    const dotsWrap = document.getElementById('dots')
+    let idx = 0, timer
+
+    function renderSlides(){
+      slider.innerHTML = ''
+      dotsWrap.innerHTML = ''
+      slides.forEach((s,i)=>{
+        const fig = document.createElement('figure')
+        fig.className = 'slide'
+        fig.innerHTML = `<img src="${s.src}" alt="slide ${i+1}"><figcaption>${s.caption}</figcaption>`
+        slider.appendChild(fig)
+        const dot = document.createElement('button')
+        dot.className = 'dot'
+        dot.addEventListener('click',()=>go(i))
+        dotsWrap.appendChild(dot)
+      })
+    }
+
+    function go(n){
+      idx = (n+slides.length)%slides.length
+      const all = slider.querySelectorAll('.slide')
+      all.forEach((el,i)=>{
+        el.classList.toggle('active', i===idx)
+      })
+      const dots = dotsWrap.querySelectorAll('.dot')
+      dots.forEach((d,i)=>d.classList.toggle('active', i===idx))
+    }
+
+    function next(){ go(idx+1) }
+    function prev(){ go(idx-1) }
+
+    function play(){ stop(); timer = setInterval(next, 3500) }
+    function stop(){ if(timer) clearInterval(timer) }
+
+    renderSlides(); go(0); play()
+
+    document.getElementById('next').addEventListener('click', ()=>{ next(); play() })
+    document.getElementById('prev').addEventListener('click', ()=>{ prev(); play() })
+    document.getElementById('play').addEventListener('click', ()=> play())
+    document.getElementById('pause').addEventListener('click', ()=> stop())
+
+    addEventListener('keydown', e=>{
+      if(e.key==='ArrowRight'){ next(); play() }
+      if(e.key==='ArrowLeft'){ prev(); play() }
+    })
+
+    // ======= Theme switch =======
+    const switchBtn = document.getElementById('switchTheme')
+    let dark = true
+    switchBtn.addEventListener('click', () => {
+      dark = !dark
+      document.body.style.background = dark
+        ? 'radial-gradient(1200px 800px at 20% 10%, #1a152f 0%, #0b0b18 55%, #000 100%)'
+        : 'linear-gradient(120deg, #ffe5f6 0%, #fff7ef 100%)'
+      document.documentElement.style.setProperty('--glass', dark? 'rgba(255,255,255,.08)':'rgba(0,0,0,.05)')
+      document.documentElement.style.setProperty('--card', dark? '#121222cc':'#ffffffd9')
+    })
+
+    // ======= Cute fireworks on click =======
+    const fx = document.getElementById('fx'), fctx = fx.getContext('2d')
+    function resizeFx(){ fx.width = innerWidth; fx.height = innerHeight }
+    addEventListener('resize', resizeFx); resizeFx()
+    const bursts=[]
+    function fire(x,y,hue){
+      const parts = []
+      const N = 60
+      for(let i=0;i<N;i++){
+        const a = (i/N)*Math.PI*2
+        const speed = 2 + Math.random()*3
+        parts.push({x,y, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 60+Math.random()*20, r:2+Math.random()*2, hue})
+      }
+      bursts.push(parts)
+    }
+    function anim(){
+      // stars
+      bctx.clearRect(0,0,W,H)
+      for(const s of stars){
+        s.x -= s.s; if(s.x<0) s.x = W
+        bctx.globalAlpha = .7
+        bctx.beginPath(); bctx.arc(s.x, s.y, s.r, 0, Math.PI*2); bctx.fillStyle = 'white'; bctx.fill()
+      }
+      // fireworks
+      fctx.clearRect(0,0,fx.width,fx.height)
+      for(const parts of bursts){
+        for(const p of parts){
+          p.x += p.vx; p.y += p.vy; p.vy += 0.03; p.life -= 1
+          fctx.globalCompositeOperation = 'lighter'
+          fctx.beginPath(); fctx.arc(p.x,p.y, p.r,0,Math.PI*2)
+          fctx.fillStyle = `hsl(${p.hue},100%,60%)`
+          fctx.fill()
+        }
+      }
+      for(let i=bursts.length-1;i>=0;i--){
+        if(bursts[i].every(p=>p.life<=0)) bursts.splice(i,1)
+      }
+      requestAnimationFrame(anim)
+    }
+    anim()
+
+    // Surprise button => hearts + fireworks
+    document.getElementById('surpriseBtn').addEventListener('click', () => {
+      const cx = innerWidth/2, cy = innerHeight*0.35
+      for(let i=0;i<5;i++) setTimeout(()=>fire(cx + (Math.random()*120-60), cy + (Math.random()*60-30), Math.floor(Math.random()*360)), i*160)
+      pulseTitle()
+    })
+
+    function pulseTitle(){
+      const t = document.querySelector('.title')
+      t.animate([
+        {transform:'scale(1)', filter:'drop-shadow(0 6px 22px rgba(255,110,199,.25))'},
+        {transform:'scale(1.06)', filter:'drop-shadow(0 10px 40px rgba(255,110,199,.55))'},
+        {transform:'scale(1)'}
+      ],{duration:900, easing:'cubic-bezier(.2,.8,.2,1)'} )
+    }
+
+    // Click anywhere makes a small pop
+    addEventListener('click', (e)=>{
+      if(e.target.closest('#surpriseBtn, #switchTheme, .player, audio')) return
+      fire(e.clientX, e.clientY, Math.floor(Math.random()*360))
+    })
+
+    // Quick customize: click a reason to edit text
+    document.getElementById('reasons').addEventListener('click', e=>{
+      if(!e.target.classList.contains('reason')) return
+      const text = prompt('Edit this reason:', e.target.textContent.trim())
+      if(text!==null) e.target.textContent = text
+    })
+  </script>
+</body>
+</html>
